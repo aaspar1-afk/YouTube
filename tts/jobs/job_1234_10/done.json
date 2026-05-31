@@ -1,0 +1,11 @@
+﻿{
+    "duration":  267.55,
+    "status":  "done",
+    "completed":  {
+                      "value":  "\/Date(1780151256674)\/",
+                      "DisplayHint":  2,
+                      "DateTime":  "30 травня 2026 р. 17:27:36"
+                  },
+    "final":  "/tts/jobs/job_1234_10/final.mp3",
+    "job":  "job_1234_10"
+}
