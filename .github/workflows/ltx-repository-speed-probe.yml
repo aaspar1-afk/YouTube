@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
-      - name: Download at most 256 MiB in memory
+      - name: Download at most 1 GiB in memory
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         shell: python
@@ -42,14 +42,14 @@ jobs:
              return dict(file=path,bytes=count,seconds=round(elapsed,4),connection_seconds=round(connected-at,4),MB_s=round(count/1e6/elapsed,2),complete=count==size)
            except Exception as e:return dict(file=path,bytes=count,error_type=type(e).__name__,http_status=getattr(e,"code",None))
           M=1024**2
-          single=[fetch((path,total,0,64*M)) for path,total in files]
+          single=[]
           at=time.monotonic()
-          tasks=[(path,total,64*M,64*M) for path,total in files]
+          tasks=[(path,total,0,512*M) for path,total in files]
           with concurrent.futures.ThreadPoolExecutor(max_workers=2) as pool:parallel=list(pool.map(fetch,tasks))
           seconds=time.monotonic()-at
           received=sum(r["bytes"] for r in single+parallel)
-          assert received<=256*M
-          report=dict(repo=repo,revision=revision,runner="GitHub ubuntu-24.04 standard",single=single,parallel=parallel,parallel_seconds=round(seconds,4),parallel_MB_s=round(sum(r["bytes"] for r in parallel)/1e6/seconds,2),received_bytes=received,limit_bytes=256*M,weights_retained=False,retries=0,B2_used=False,GPU_used=False)
+          assert received<=1024*M
+          report=dict(repo=repo,revision=revision,runner="GitHub ubuntu-24.04 standard",single=single,parallel=parallel,parallel_seconds=round(seconds,4),parallel_MB_s=round(sum(r["bytes"] for r in parallel)/1e6/seconds,2),received_bytes=received,limit_bytes=1024*M,weights_retained=False,retries=0,B2_used=False,GPU_used=False)
           print(json.dumps(report,indent=2))
           with open(os.environ["GITHUB_STEP_SUMMARY"],"a") as summary:summary.write("### Bounded LTX speed probe\n\n```json\n"+json.dumps(report,indent=2)+"\n```\n")
           if not all(r.get("complete") for r in single+parallel):raise SystemExit("Probe incomplete; inspect safe status fields")
